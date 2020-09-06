@@ -1,0 +1,1 @@
+Use rust to do exercise in LeetCode.
