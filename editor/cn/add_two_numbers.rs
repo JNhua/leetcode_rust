@@ -14,67 +14,129 @@
 // 👍 4847 👎 0
 
 
-pub struct Solution{}
+pub struct Solution {}
 
 //leetcode submit region begin(Prohibit modification and deletion)
 // Definition for singly-linked list.
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub struct ListNode {
-  pub val: i32,
-  pub next: Option<Box<ListNode>>
+// #[derive(PartialEq, Eq, Clone, Debug)]
+// pub struct ListNode {
+//     pub val: i32,
+//     pub next: Option<Box<ListNode>>,
+// }
+//
+// impl ListNode {
+//     #[inline]
+//     fn new(val: i32) -> Self {
+//         ListNode {
+//             next: None,
+//             val,
+//         }
+//     }
+// }
+
+struct List {
+    head: Option<Box<ListNode>>,
 }
 
-impl ListNode {
-  #[inline]
-  fn new(val: i32) -> Self {
-    ListNode {
-      next: None,
-      val
+impl List {
+    fn push(&mut self, val: i32) {
+        let new_node = Box::new(ListNode {
+            val,
+            next: self.head.take(),
+        });
+        self.head = Some(new_node);
     }
-  }
+    fn pop(&mut self) -> Option<i32> {
+        self.head.take().map(|node| {
+            self.head = node.next;
+            node.val
+        })
+    }
+
+    fn into_iter(self) -> IntoIter {
+        IntoIter(self)
+    }
 }
 
-fn get_num(mut l: Option<Box<ListNode>>) -> i32{
-    let mut n = 0;
-    while l.is_some() {
-        n = n*10+ l.clone().unwrap().val;
-        l = l.unwrap().next;
-    }
-    n
-}
+struct IntoIter(List);
 
-fn get_list(mut n: i32) -> Box<ListNode>{
-    let mut v = Vec::new();
-    if n==0{
-        v.push(n);
-    } else{
-        while n!=0 {
-            v.push(n%10);
-            n/=10;
-        }
+impl Iterator for IntoIter {
+    type Item = i32;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.pop()
     }
-
-    let mut head = Box::new(ListNode::new(v[0]));
-    let mut last = &mut head;
-    let mut first = true;
-    for num in v.iter(){
-        if first{
-            first = false;
-            continue;
-        }
-        let mut node = Box::new(ListNode::new(*num));
-        last.next = Some(node);
-        last = &mut node;
-    }
-    head
 }
 
 impl Solution {
     pub fn add_two_numbers(l1: Option<Box<ListNode>>, l2: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
-        let n1 = get_num(l1.clone());
-        let n2 = get_num(l2.clone());
-        let ans = n1 + n2;
-        Some(get_list(ans))
+        let mut ans = List { head: None };
+        let mut ans_vec = Vec::new();
+        let mut carry = 0;
+        let mut iter1 = List { head: l1 }.into_iter();
+        let mut iter2 = List { head: l2 }.into_iter();
+        while let Some(val1) = iter1.next() {
+            let mut num = 0;
+            if let Some(val2) = iter2.next() {
+                num = val1 + val2 + carry;
+            } else {
+                num = val1 + carry;
+            }
+            if num >= 10 {
+                num -= 10;
+                carry = 1;
+            } else {
+                carry = 0;
+            }
+            ans_vec.push(num);
+        }
+        while let Some(val2) = iter2.next() {
+            let mut num = val2 + carry;
+            if num >= 10 {
+                num -= 10;
+                carry = 1;
+            } else {
+                carry = 0;
+            }
+            ans_vec.push(num);
+        }
+        if carry != 0{
+            ans_vec.push(carry);
+        }
+        ans_vec.reverse();
+        for num in ans_vec.iter() {
+            ans.push(*num);
+        }
+        ans.head
     }
 }
 //leetcode submit region end(Prohibit modification and deletion)
+
+#[test]
+fn test_case() {
+    fn get_list(mut n: i32) -> Option<Box<ListNode>> {
+        let mut v = Vec::new();
+        if n == 0 {
+            v.push(n);
+        } else {
+            while n != 0 {
+                v.push(n % 10);
+                n /= 10;
+            }
+        }
+
+        let mut list = List { head: None };
+        v.reverse();
+        for num in v.iter() {
+            list.push(*num);
+        }
+        list.head
+    }
+
+    let l1 = get_list(342);
+    let l2 = get_list(465);
+    let ans = Solution::add_two_numbers(l1, l2);
+    let mut ans_iter = List { head: ans }.into_iter();
+    assert_eq!(ans_iter.next(), Some(7));
+    assert_eq!(ans_iter.next(), Some(0));
+    assert_eq!(ans_iter.next(), Some(8));
+}
