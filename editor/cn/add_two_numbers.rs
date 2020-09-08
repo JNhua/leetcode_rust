@@ -18,95 +18,66 @@ pub struct Solution {}
 
 //leetcode submit region begin(Prohibit modification and deletion)
 // Definition for singly-linked list.
-// #[derive(PartialEq, Eq, Clone, Debug)]
-// pub struct ListNode {
-//     pub val: i32,
-//     pub next: Option<Box<ListNode>>,
-// }
-//
-// impl ListNode {
-//     #[inline]
-//     fn new(val: i32) -> Self {
-//         ListNode {
-//             next: None,
-//             val,
-//         }
-//     }
-// }
-
-struct List {
-    head: Option<Box<ListNode>>,
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct ListNode {
+    pub val: i32,
+    pub next: Option<Box<ListNode>>,
 }
 
-impl List {
-    fn push(&mut self, val: i32) {
-        let new_node = Box::new(ListNode {
+impl ListNode {
+    #[inline]
+    fn new(val: i32) -> Self {
+        ListNode {
+            next: None,
             val,
-            next: self.head.take(),
-        });
-        self.head = Some(new_node);
-    }
-    fn pop(&mut self) -> Option<i32> {
-        self.head.take().map(|node| {
-            self.head = node.next;
-            node.val
-        })
-    }
-
-    fn into_iter(self) -> IntoIter {
-        IntoIter(self)
+        }
     }
 }
 
-struct IntoIter(List);
+fn insert_back(mut tail: &mut Box<ListNode>, val: i32) -> &mut Box<ListNode>{
+    let new_node = Box::new(ListNode::new(val));
+    tail.next = Some(new_node);
+    tail = tail.next.as_mut().unwrap();
+    tail
+}
 
-impl Iterator for IntoIter {
-    type Item = i32;
-    fn next(&mut self) -> Option<Self::Item> {
-        self.0.pop()
+fn add_two_node(num: &mut i32, carry: &mut i32) {
+    if *num >= 10 {
+        *num -= 10;
+        *carry = 1;
+    } else {
+        *carry = 0;
     }
 }
 
 impl Solution {
     pub fn add_two_numbers(l1: Option<Box<ListNode>>, l2: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
-        let mut ans = List { head: None };
-        let mut ans_vec = Vec::new();
+        let mut head = Box::new(ListNode::new(0));
+        let mut tail = &mut head;
         let mut carry = 0;
-        let mut iter1 = List { head: l1 }.into_iter();
-        let mut iter2 = List { head: l2 }.into_iter();
-        while let Some(val1) = iter1.next() {
+        let (mut p1,mut p2) = (l1.as_ref(),l2.as_ref());
+        while let Some(node1) = p1.as_ref() {
             let mut num = 0;
-            if let Some(val2) = iter2.next() {
-                num = val1 + val2 + carry;
+            if let Some(node2) = p2.as_ref() {
+                num = &node1.val + &node2.val + carry;
+                p2 = node2.next.as_ref();
             } else {
-                num = val1 + carry;
+                num = node1.val + carry;
             }
-            if num >= 10 {
-                num -= 10;
-                carry = 1;
-            } else {
-                carry = 0;
-            }
-            ans_vec.push(num);
+            add_two_node(&mut num, &mut carry);
+            tail = insert_back(tail, num);
+            p1 = node1.next.as_ref();
         }
-        while let Some(val2) = iter2.next() {
-            let mut num = val2 + carry;
-            if num >= 10 {
-                num -= 10;
-                carry = 1;
-            } else {
-                carry = 0;
-            }
-            ans_vec.push(num);
+        while let Some(node2) = p2.as_ref() {
+            let mut num = &node2.val + carry;
+            add_two_node(&mut num,&mut carry);
+            tail = insert_back(tail, num);
+            p2 = node2.next.as_ref();
         }
         if carry != 0{
-            ans_vec.push(carry);
+            tail = insert_back(tail, carry);
         }
-        ans_vec.reverse();
-        for num in ans_vec.iter() {
-            ans.push(*num);
-        }
-        ans.head
+        head.next
     }
 }
 //leetcode submit region end(Prohibit modification and deletion)
@@ -124,19 +95,22 @@ fn test_case() {
             }
         }
 
-        let mut list = List { head: None };
-        v.reverse();
+        let mut head = Box::new(ListNode::new(0));
+        let mut tail = &mut head;
         for num in v.iter() {
-            list.push(*num);
+            let new_node = Box::new(ListNode::new(*num));
+            tail.next = Some(new_node);
+            tail = tail.next.as_mut().unwrap();
         }
-        list.head
+        head.next
     }
 
     let l1 = get_list(342);
     let l2 = get_list(465);
     let ans = Solution::add_two_numbers(l1, l2);
-    let mut ans_iter = List { head: ans }.into_iter();
-    assert_eq!(ans_iter.next(), Some(7));
-    assert_eq!(ans_iter.next(), Some(0));
-    assert_eq!(ans_iter.next(), Some(8));
+    let mut tail = ans.as_ref();
+    while let Some(node) = tail{
+        println!("{}", node.val);
+        tail = node.next.as_ref();
+    }
 }
