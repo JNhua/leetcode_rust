@@ -20,7 +20,7 @@ pub struct Solution{}
 impl Solution {
     pub fn two_sum(nums: Vec<i32>, target: i32) -> Vec<i32> {
         use std::collections::HashMap;
-        let mut array = HashMap::new();
+        let mut array = HashMap::with_capacity(nums.len());
 
         for (index, n) in nums.iter().enumerate(){
             let diff = target - *n;
