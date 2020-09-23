@@ -1,3 +1,3 @@
-include!("../editor/cn/longest_substring_without_repeating_characters.rs");
+include!("../editor/cn/median_of_two_sorted_arrays.rs");
 
 fn main(){}

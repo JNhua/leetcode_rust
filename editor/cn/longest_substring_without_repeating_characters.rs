@@ -31,42 +31,41 @@ pub struct Solution {}
 impl Solution {
     pub fn length_of_longest_substring(s: String) -> i32 {
         let mut dp = Vec::with_capacity(s.len());
-        let mut max_len = 0;
-        let mut sub_str = vec![];
-        let mut repeat = false;
-        for (i, c) in s.chars().enumerate() {
+        let mut max_len: i32 = 0;
+        let str = s.as_bytes();
+        let mut repeat;
+        let mut pos = 0usize;
+
+        for i in 0..str.len() {
             repeat = false;
             if i == 0 {
                 dp.push(1);
-                sub_str.push(c);
+                pos = i;
+                max_len = 1;
             } else {
-                let mut split_index: usize = 0;
-                for (j, str) in sub_str {
-                    if str == c {
+                for j in pos..i {
+                    if str[j] == str[i] {
                         repeat = true;
-                        split_index = j;
+                        pos = j + 1;
                         break;
                     }
                 }
                 if !repeat {
-                    println!("{}, {}", pre, c);
                     dp.push(dp[i - 1] + 1);
                     if dp[i] > max_len {
                         max_len = dp[i];
                     }
                 } else {
-                    for j in 0..split_index + 1 {
-                        sub_str.remove(j);
-                    }
+                    dp.push((i - pos + 1) as i32);
                 }
-                sub_str.push(c);
             }
         }
         max_len
     }
+}
 //leetcode submit region end(Prohibit modification and deletion)
 
-    #[test]
-    fn test_case() {
-        assert_eq!(Solution::length_of_longest_substring(String::from("abcabcbb")), 3);
-    }
+#[test]
+fn test_case() {
+    assert_eq!(Solution::length_of_longest_substring(String::from("abcabcbb")), 3);
+}
